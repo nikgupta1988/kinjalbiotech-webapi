@@ -3,12 +3,23 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Read connection string from configuration
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Read database provider and connection strings from configuration
+var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "SqlServer";
+var sqlServerConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+var sqliteConnection = builder.Configuration.GetConnectionString("SqliteConnection");
 
-// Register DbContext for Entity Framework
+// Register DbContext for Entity Framework with flexible provider
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    if (databaseProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseSqlServer(sqlServerConnection);
+    }
+    else
+    {
+        options.UseSqlite(sqliteConnection);
+    }
+});
 
 // Add services to the container
 builder.Services.AddControllers();
